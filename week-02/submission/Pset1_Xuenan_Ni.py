@@ -55,15 +55,18 @@ from random import randint
 import math
 ##set my lower bound to be 1 and upper bound to be 10
 
-def my_random(high, low=0.000001):
-
+def my_random(high, low=0):
     num = randint(10,1000)
-    x = 10/low
-    y = 1000/high
-    if y>x:
-        y = y
+    if low !=0:
+        x = 10/low
+        y = 1000/high
+        if y>x:
+            y = y
+        else:
+            y = x
+
     else:
-        y = x
+        y = 1000/high
     z = math.floor(num/y)
     return z
 
