@@ -278,7 +278,7 @@ What we're doing here is creating a new `date_new` column based on our `date` co
 df['date'].head
 ```
 
-Once we've created a new column, we can create another column which uses an internal calendar to determine which day a given calendar date lands on. The one quirk here is that, by convention, the `weekday` function returns a numeric value according to a week that runs from 0 to 6 where 0 is Monday. Our 0 hour is midnight on Sunday, so we'll need to make our weekday number match our `hours` column. We do this using the `.apply() method`.
+Once we've created a new column, we can create another column which uses an internal calendar to determine which day a given calendar date lands on. The one quirk here is that, by convention, the `weekday` function returns a numeric value according to a week that runs from 0 to 6 where 0 is Monday. Our 0 hour is on Sunday, so we'll need to make our weekday number match our `hours` column. We do this using the `.apply() method`.
 
 ```python
 df['weekday'] = df['date_new'].apply(lambda x: x.weekday() + 1)
@@ -286,14 +286,19 @@ df['weekday'].replace(7, 0, inplace = True)
 ```
 
 `lambda` sounds complicated, but really isn't. It allows us to define a function on the fly---here we're saying "do the following for every row: identify a weekday and add one to the returned value." This results in a range from 1-7 and we still want it to range from 0 to 6, so we replace 7 with 0 using the built-in Pandas `.replace` method.
-
+#built-in: Monday is 0 but now Sunday is 0
 With this new column, we have everything we need to drop rows that are outside a desired 24-hour time window using a relatively simple for loop:
 
 ```python
+  i = 0
+  j = range(0,168,1)[i - 5]
+  j
+  i = range(0, 168, 24)
+  print(i[0])
 # df[df['date'] == '2017-07-10'].groupby('hour')['count'].sum()
 for i in range(0, 168, 24):
   j = range(0,168,1)[i - 5]
-  if (j > i):
+  if (j > i): #this is checking hours from 163-167.
     df.drop(df[
     (df['weekday'] == (i/24)) &
     (
@@ -310,6 +315,12 @@ for i in range(0, 168, 24):
     ].index, inplace = True)
 ```
 
+
+```python
+for i in range(0,168,24):
+
+
+```
 This looks complicated, but let's break it down. We're running a loop which iterates over a range from 0 to 168, exclusive, using steps of 24. In other words, we're iterating over a week's worth of hours, day-by-day.
 
 But there's a trick. It turns out that these times are logged using Greenwich Mean Time, meaning that Boston is 5 hours behind. This poses a problem when we're dealing with the first day of the week: there are five hours that wrap around the break in the array, occupying elements 163 - 167. If we simply subtract from our `i` value, we'll get negative values; the `hours` column contains no negative values. We therefore create a second range from 0-168 with one-step intervals, which permits us to use those negative numbers to access later elements in the `range`.

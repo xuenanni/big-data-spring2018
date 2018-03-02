@@ -59,13 +59,13 @@ We'll also be using a JSON parsing package called `jsonpickle`. Install it (`pip
 In Atom, make a new .py file where we will be writing our scraper and import the libraries:
 
 ```python
-import jsonpickle
-import tweepy
+import jsonpickle as jsonpickle
+import tweepy as tweepy
 import pandas as pd
 
 # Imports the keys from the python file
 # You may need to change working directory
-import os
+import os as os
 os.chdir('week-04')
 from twitter_keys import api_key, api_secret
 ```
@@ -79,6 +79,7 @@ Tweepy has a built-in function (`AppAuthHandler`) that will pass keys to the API
 ```python
 auth = tweepy.AppAuthHandler(api_key, api_secret)
 # wait_on_rate_limit and wait_on_rate_limit_notify are options that tell our API object to automatically wait before passing additional queries if we come up against Twitter's wait limits (and to inform us when it's doing so).
+
 api = tweepy.API(auth, wait_on_rate_limit = True, wait_on_rate_limit_notify = True)
 ```
 
@@ -94,6 +95,7 @@ def auth(key, secret):
       sys.exit(-1)
   else:
       return api
+api = auth(api_key, api_secret)
 ```
 
 We can then call this function as follows:
@@ -139,12 +141,12 @@ def get_tweets(
     search_term = '',
     tweet_per_query = 100,
     tweet_max = 150,
-    since_id = None,
+    since_id = None, ##what does since_id do?
     max_id = -1,
     write = False
   ):
   tweet_count = 0
-  # all_tweets = pd.DataFrame()
+  all_tweets = pd.DataFrame()
   while tweet_count < tweet_max:
     try:
       if (max_id <= 0):
@@ -181,18 +183,18 @@ def get_tweets(
         print("No more tweets found")
         break
       for tweet in new_tweets:
-        # all_tweets = all_tweets.append(parse_tweet(tweet), ignore_index = True)
+        all_tweets = all_tweets.append(parse_tweet(tweet), ignore_index = True)
         if write == True:
             with open(out_file, 'w') as f:
                 f.write(jsonpickle.encode(tweet._json, unpicklable=False) + '\n')
-      max_id = new_tweets[-1].id
+      max_id = new_tweets[-1].id  ##???
       tweet_count += len(new_tweets)
     except tweepy.TweepError as e:
       # Just exit if any error
       print("Error : " + str(e))
       break
   print (f"Downloaded {tweet_count} tweets.")
-  # return all_tweets
+  return all_tweets
 
 # Set a Lat Lon
 latlng = '42.359416,-71.093993' # Eric's office (ish)
@@ -206,13 +208,12 @@ file_name = 'data/tweets.json'
 # to get more than one
 t_max = 200
 
-get_tweets(
+tweets = get_tweets(
   geo = geocode_query,
   tweet_max = t_max,
   write = True,
-  out_file = file_name
-)
-```
+  out_file = file_name)
+##modified with tweets = get_tweets(). Original was get_tweets()```
 
 This function will run as is, allowing you to download Tweets to a `.json` file---give it a go! However, we might also want to download it into a more Python-legible format so that we can manipulate it and analyze it.
 
@@ -236,6 +237,8 @@ def parse_tweet(tweet):
   p['user_id'] = tweet.user.id_str
   p['time'] = str(tweet.created_at)
   return p
+
+
 ```
 
 We can now uncomment the lines that read `all_tweets = pd.DataFrame()`, `all_tweets = all_tweets.append(parse_tweet(tweet), ignore_index = True)`, and `return all_tweets` in our `get_tweets` function. These lines...
@@ -262,7 +265,7 @@ We're about to start cleaning our data; cleaning is not an exact science, and so
 We can always reload our data by running the below command, where `df` is an arbitrary variable name and `path/example_json.json` is the path to, for example, your Tweets:
 
 ```python
-df = pd.read_json('path/example_json.json')
+df = pd.read_json('data/tweets.json')
 ```
 
 ## Let's Explore the Tweets
@@ -288,16 +291,18 @@ When we say 'location', we're not referring to the Tweet's lat/long; instead, we
 
 ```python
 tweets.dtypes
+df.dtypes
 ```
 
 ```python
 tweets['location'].unique()
+df['location'].unique
 ```
 
 Now let's do some grouping and sorting. We are using Pandas to do our analysis, much like last week.
 
 ```python
-
+tweets
 loc_tweets = tweets[tweets['location'] != '']
 count_tweets = loc_tweets.groupby('location')['id'].count()
 df_count_tweets = count_tweets.to_frame()
