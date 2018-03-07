@@ -251,10 +251,10 @@ Now we can run the `get_tweets` function using the following statement. Because 
 
 ```python
 tweets = get_tweets(
-  geo = geocode_query,
-  tweet_max = t_max,
-  write = True,
-  out_file = file_name
+ geo = geocode_query,
+ tweet_max = t_max,
+ write = True,
+ out_file = file_name
 )
 ```
 
@@ -266,6 +266,7 @@ We can always reload our data by running the below command, where `df` is an arb
 
 ```python
 df = pd.read_json('data/tweets.json')
+df
 ```
 
 ## Let's Explore the Tweets
