@@ -67,6 +67,7 @@ import pandas as pd
 # You may need to change working directory
 import os as os
 os.chdir('week-04')
+
 from twitter_keys import api_key, api_secret
 ```
 
@@ -183,17 +184,27 @@ def get_tweets(
         print("No more tweets found")
         break
       for tweet in new_tweets:
+<<<<<<< HEAD
         all_tweets = all_tweets.append(parse_tweet(tweet), ignore_index = True)
         if write == True:
             with open(out_file, 'w') as f:
                 f.write(jsonpickle.encode(tweet._json, unpicklable=False) + '\n')
       max_id = new_tweets[-1].id  ##???
+=======
+        # all_tweets = all_tweets.append(parse_tweet(tweet), ignore_index = True)
+      max_id = new_tweets[-1].id
+>>>>>>> class/master
       tweet_count += len(new_tweets)
     except tweepy.TweepError as e:
       # Just exit if any error
       print("Error : " + str(e))
       break
   print (f"Downloaded {tweet_count} tweets.")
+<<<<<<< HEAD
+=======
+  # if write == True:
+  #     all_tweets.to_json(out_file)
+>>>>>>> class/master
   return all_tweets
 
 # Set a Lat Lon
@@ -358,7 +369,12 @@ You saw above that we had a bunch of locations that were very similar. Here, we 
 
 ```python
 bos_list = tweets[tweets['location'].str.contains("Boston")]['location']
+print(bos_list)
+
+
 tweets['location'].replace(bos_list, 'Boston, MA', inplace = True)
+
+tweets['location'].unique()
 ```
 
 To finish cleaning the data, you would want to iteratively follow a similar process until you've cleaned all locations and made them conform to a single convention.

@@ -92,7 +92,7 @@ radius = '1mi'
 # See tweepy API reference for format specifications
 geocode_query = latlng + ',' + radius
 # set output file location
-file_name = 'data/tweets.json'
+file_name = 'data/tweets_ex.json'
 # set threshold number of Tweets. Note that it's possible
 # to get more than one
 t_max = 200
