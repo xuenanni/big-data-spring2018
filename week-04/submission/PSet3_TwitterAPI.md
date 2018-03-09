@@ -238,8 +238,10 @@ Create a scatterplot showing all of the tweets are that are geolocated (i.e., in
 tweets_geo = tweets[tweets['lon'].notnull() & tweets['lat'].notnull()]
 len(tweets_geo)
 len(tweets)
-plt.scatter(tweets_geo['lon'], tweets_geo['lat'], s = 40,c='darkgreen')
+plt.scatter(tweets_geo['lat'], tweets_geo['lon'], s = 40,c='darkgreen')
 plt.title('Scatterplot of 198 Geolocated Tweets')
+plt.xlabel("longitude")
+plt.ylabel("latitude")
 plt.show()
 
 ```
@@ -441,8 +443,10 @@ Create a scatterplot showing all of the tweets that include your search term tha
 tweets_geo = df1[df1['lon'].notnull() & df1['lat'].notnull()]
 len(tweets_geo)
 len(df1)
-plt.scatter(tweets_geo['lon'], tweets_geo['lat'], s = 40, c='darkgreen')
-plt.title('Scatterplot of 198 Geolocated Tweets')
+plt.scatter(tweets_geo['lat'], tweets_geo['lon'], s = 40, c='darkgreen')
+plt.title('Scatterplot of 28 Geolocated Tweets')
+plt.xlabel("longitude")
+plt.ylabel("latitude")
 plt.show()
 
 ```
