@@ -51,13 +51,13 @@ from osgeo import gdal
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pandas as pd
+
 %matplotlib inline
 
 # Mac Users: If you're having issues importing GDAL,
 # you may have to add GDAL to your Python path again
 # sys.path.insert(0,'/Library/Frameworks/GDAL.framework/Versions/2.2/Python/3.6/site-packages')
-
-DATA = "/Users/ehuntley/Desktop/week-05/landsat"
 
 def process_string (st):
     """
@@ -107,12 +107,17 @@ def array2tif(raster_file, new_raster_file, array):
     # Write our Numpy array to the new band!
     out_band.WriteArray(array)
 
+array2tif('','', )
+
 ```
 # Your Functions!
 
 We recommend reading carefully through the goals for all functions before starting the first function.
 
 ```python
+
+b10 = "/Users/xuenanni/Desktop/class_notes/Big-data/week05/LC08_L1TP_025037_20130630_20170310_01_T1/LC08_L1TP_025037_20130630_20170310_01_T1_B10.TIF"
+
 def tif2array(location):
     """
     Should:
@@ -122,6 +127,16 @@ def tif2array(location):
     4. Convert the numpy array to type 'float32'
     5. Return the numpy array.
     """
+    #tirs_path = os.path.join(location, 'LC08_L1TP_025037_20130630_20170310_01_T1_B10.TIF')
+
+    tirs_data = gdal.Open(location)
+    tirs_band = tirs_data.GetRasterBand(1)
+    tirs = tirs_band.ReadAsArray()
+    tirs = tirs.astype(np.float32)
+    return tirs
+
+
+meta_text = '/Users/xuenanni/Desktop/class_notes/Big-data/week05/LC08_L1TP_025037_20130630_20170310_01_T1/LC08_L1TP_025037_20130630_20170310_01_T1_MTL.txt'
 
 def retrieve_meta(meta_text):
     """
@@ -130,27 +145,79 @@ def retrieve_meta(meta_text):
     'meta_text' should be the location of your metadata file
     Use the process_string function we created in the workshop.
     """
+    with open(meta_text) as f:
+        meta = f.readlines()
+        # Define terms to match
+    matchers = ['RADIANCE_MULT_BAND_10', 'RADIANCE_ADD_BAND_10', 'K1_CONSTANT_BAND_10', 'K2_CONSTANT_BAND_10']
 
-def rad_calc(tirs, var_list):
+    [s for s in meta if any(xs in s for xs in matchers)]
+
+    matching = [process_string(s) for s in meta if any(xs in s for xs in matchers)]
+    rad_mult_b10, rad_add_b10, k1_b10, k2_b10 = matching
+  #  return rad_mult_b10, rad_add_b10, k1_b10, k2_b10
+    return matching
+retrieve_meta(meta_text)
+
+#tirs = tif2array(location)
+#var_list = retrieve_meta(meta_text)
+def rad_calc(tirs, var_list): #step1
     """
     Calculate Top of Atmosphere Spectral Radiance
     Note that you'll have to access the metadata variables by
     their index number in the list, instead of naming them like we did in class.
     """
+    rad = var_list[0] * tirs + var_list[1]
+    plt.imshow(rad, cmap='RdYlGn')
+    plt.colorbar()
+    return rad
 
-def bt_calc(rad, var_list):
+rad = rad_calc(tirs, var_list)
+var_list = retrieve_meta(meta_text)
+def bt_calc(rad, var_list): #step 2
     """
     Calculate Brightness Temperature
     Again, you'll have to access appropriate metadata variables
     by their index number.
     """
+    bt = var_list[3] / np.log((var_list[2]/rad) + 1) - 273.15
+    return bt
+bt_calc(rad, var_list)
 
-def pv_calc(ndvi, ndvi_s, ndvi_v):
+
+##ndvi
+DATA = "/Users/xuenanni/Desktop/class_notes/Big-data/week05/LC08_L1TP_025037_20130630_20170310_01_T1"
+b4_raster = os.path.join(DATA, 'LC08_L1TP_025037_20130630_20170310_01_T1_B4.TIF')
+b5_raster = os.path.join(DATA, 'LC08_L1TP_025037_20130630_20170310_01_T1_B5.TIF')
+
+# Load in Red band
+red_data = gdal.Open(b4_raster)
+red_band = red_data.GetRasterBand(1)
+red = red_band.ReadAsArray()
+
+# Load in Near-infrasred band
+nir_data = gdal.Open(b5_raster)
+nir_band = nir_data.GetRasterBand(1)
+nir = nir_band.ReadAsArray()
+
+red = red.astype(np.float32)
+nir = nir.astype(np.float32)
+
+ndvi = ndvi_calc(red, nir)
+ndvi
+ndvi_v = 0.5
+ndvi_s = 0.2
+def pv_calc(ndvi, ndvi_s, ndvi_v):  #step 4
     """
     Calculate Proportional Vegetation
     """
+    pv = (ndvi - ndvi_s) / (ndvi_v - ndvi_s) ** 2
+    return pv
+pv_calc(ndvi, ndvi_s, ndvi_v)
 
-def lst_calc(location):
+b4 =  "/Users/xuenanni/Desktop/class_notes/Big-data/week05/LC08_L1TP_025037_20130630_20170310_01_T1/LC08_L1TP_025037_20130630_20170310_01_T1_B4.TIF"
+b5 =  "/Users/xuenanni/Desktop/class_notes/Big-data/week05/LC08_L1TP_025037_20130630_20170310_01_T1/LC08_L1TP_025037_20130630_20170310_01_T1_B5.TIF"
+
+def lst_calc(location): #step 6
     """
     Calculate Estimate of Land Surface Temperature.
     Your output should
@@ -167,6 +234,40 @@ def lst_calc(location):
     This is a processing artifact that you're not expected to account for.
     Nothing to worry about!
     """
+
+    wave = 10.8E-06
+    # PLANCK'S CONSTANT
+    h = 6.626e-34
+    # SPEED OF LIGHT
+    c = 2.998e8
+    # BOLTZMANN's CONSTANT
+    s = 1.38e-23
+    p = h * c / s
+    meta_text = '/Users/xuenanni/Desktop/class_notes/Big-data/week05/LC08_L1TP_025037_20130630_20170310_01_T1/LC08_L1TP_025037_20130630_20170310_01_T1_MTL.txt'
+    tirs = tif2array(location)
+    var_list = retrieve_meta(meta_text)
+    rad = rad_calc(tirs, var_list)
+    red = tif2array(b4)
+    nir = tif2array(b5)
+
+
+    ndvi = ndvi_calc(red, nir)
+
+    ndvi_v = 0.5
+    ndvi_s = 0.2
+
+    bt = bt_calc(rad, var_list)
+    pv = pv_calc(ndvi, ndvi_s, ndvi_v)
+    emis = emissivity_calc (pv, ndvi)
+
+    lst = bt / (1 + (wave * bt / p) * np.log(emis))
+    return lst
+
+lst = lst_calc(b10)
+
+plt.imshow(lst, cmap='RdYlGn')
+plt.colorbar()
+
 ```
 
 Use these functions to generate an Normalized Difference Vegetation Index and a Land Surface Temperature Estimate for your downloaded Landsat data.
@@ -185,11 +286,25 @@ According to the [USGS Landsat documentation](https://landsat.usgs.gov/collectio
 
 Write a function that reclassifies an input Numpy array based on values stored in the BQA. The function should reclassify input data in such a way that pixels, *except for those that are clear* (for example, 2720), are assigned a value of `nan`. Use the `emissivity_calc` function as a model! We're doing something similar here! Your code will look like this:
 
+
 ```python
+
+
+bqa_raster = "/Users/xuenanni/Desktop/class_notes/Big-data/week05/LC08_L1TP_025037_20130630_20170310_01_T1/LC08_L1TP_025037_20130630_20170310_01_T1_BQA.TIF"
+
+bqa=tif2array(bqa_raster)
+
+
 def cloud_filter(array, bqa):
     array_dest = array.copy()
-    array_dest[np.where((bqa != <a certain value>) & (bqa != <another certain value>)) ] = 'nan'
+    array_dest[np.where((bqa != 2720) & (bqa != 2724) & (bqa != 2728) & (bqa != 2732)) ] = 'nan'
     return array_dest
+lst_filter = cloud_filter(lst, bqa)
+
+ndvi_filter = cloud_filter(ndvi, bqa)
+
+plt.imshow(lst_filter, cmap='RdYlGn')
+plt.colorbar()
 ```
 
 You should simply be able to revise the above function, making your criteria test for `bqa` values not equal to 2720, 2724, 2728, 2732.
@@ -206,9 +321,17 @@ def cloud_filter(array, bqa):
 You should now be able to write your NDVI and LST arrays as GeoTIFFs. For example, to write your filtered LST to a `tif` consistent with the naming convention we've requested, you would write this code (assuming you're storing your LST in a variable called `lst_filter`).
 
 ```python
-tirs_path = os.path.join(DATA, 'LC08_L1TP_012031_20170716_20170727_01_T1_B10.TIF')
-out_path = os.path.join(DATA, 'huntley_ndvi_20170716.tif')
+
+location = "/Users/xuenanni/Desktop/class_notes/Big-data/week05/LC08_L1TP_025037_20130630_20170310_01_T1"
+
+
+tirs_path = os.path.join(location, 'LC08_L1TP_025037_20130630_20170310_01_T1_B4.TIF')
+out_path = os.path.join(location, 'ni_lst_20180314.tif')
 array2tif(tirs_path, out_path, lst_filter)
+
+tirs_path = os.path.join(location, 'LC08_L1TP_025037_20130630_20170310_01_T1_B4.TIF')
+out_path = os.path.join(location, 'ni_ndvi_20180314.tif')
+array2tif(tirs_path, out_path, ndvi_filter)
 ```
 
 The reason you have to specify the `tirs_path` is that GDAL looks to another raster file to obtain dimensions, etc. We could use any of our input rasters - the TIRS band was chosen somewhat arbitrarily.

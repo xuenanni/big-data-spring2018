@@ -85,7 +85,8 @@ import numpy as np
 import os
 %matplotlib inline
 ## make sure you set the DATA path to be to the folder where you downloaded the data at the beginning of class
-DATA = "/Users/ehuntley/Desktop/week-05/landsat"
+DATA = "/Users/xuenanni/Desktop/ws04_materials"
+DATA
 ```
 
 ## Calculating a Normalized Difference Vegetation Index
@@ -99,8 +100,8 @@ Where NIR stands for near-infrared and red is light reflected in the red region.
 Okay, enough biophysics! Let's calculate the NDVI. We begin by reading in our files.
 
 ```python
-red_path = os.path.join(DATA, 'b4.tif')
-nir_path = os.path.join(DATA, 'b5.tif')
+b4_raster= os.path.join(DATA, 'b4.tif')
+b5_raster= os.path.join(DATA, 'b5.tif')
 
 # Load in Red band
 red_data = gdal.Open(b4_raster)
@@ -163,6 +164,7 @@ Better! We've just made a map of vegetated land cover using a new raster data la
 
 ```python
 ndvi = ndvi_calc(red, nir)
+ndvi
 ```
 
 **Note About Errors:** We're getting some type errors, but that's because it's dividing by null values - the function still works and will serve our purposes just fine. You may continue to get similar errors throughout the exercise. Nothing to worry about!
@@ -177,13 +179,14 @@ So far, we've been working with the red and near-infrared bands. To calculate th
 
 ```python
 # Path of TIRS Band
-tirs_path = os.path.join(DATA, 'b10.TIF')
-
+tirs_path = os.path.join(DATA, 'b10.tif')
+tirs_path
 # Load in TIRS Band
 tirs_data = gdal.Open(tirs_path)
 tirs_band = tirs_data.GetRasterBand(1)
 tirs = tirs_band.ReadAsArray()
 tirs = tirs.astype(np.float32)
+tirs
 ```
 
 We now need to read in some correction values stored in the Landsat metadata in order to convert the values stored in the band to radiances. You can do this the easy (and tedious) way or the slightly harder (and automatic) way. The easy way is by opening the file and manually searching. Feel free to do this, jotting down values as you find them. We're looking for:
