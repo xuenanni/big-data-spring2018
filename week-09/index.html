@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Mapping</title>
+  <script src="http://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+  <meta charset="utf-8">
+  <script src="data/boston_neighborhoods.json"></script>
+  <script src="data/boston_rodents.json"></script>
+  <style>
+  .incident{
+    fill: steelblue;
+  }
+  </style>
+</head>
+<body>
+  <script>
+  var width = 700;
+  var height = 500;
+  var svg = d3.select("body")
+  .append("svg")
+  .attr("width",width)
+  .attr("height",height)
+
+
+  //create group g for d3
+  var neigh = svg.append("g");
+  var rodents = svg.append("g");
+
+  var albersProjection = d3.geoAlbers()
+  .scale(190000)
+  .rotate([71.057,0])//rotation means longtitude
+  .center([0,42.3131])//rotation and center split the lon/lat
+  .translate([width/2,height/2]);
+
+ var geoPath = d3.geoPath()
+   .projection(albersProjection);
+
+ neigh.selectAll("path")
+   .data(neighborhoods_json.features)
+   .enter()
+   .append("path")
+   .attr("fill","#ccc")
+   .attr("stroke","#333")
+   .attr("d",geoPath);
+
+rodents.selectAll("path")
+  .data(rodents_json.features)
+  .enter()
+  .append("path")
+  .attr("fill","#ccc")
+  .attr("stroke","#333")
+  .attr("d",geoPath)
+  .attr("class","incident");
+
+  </script>
+</body>

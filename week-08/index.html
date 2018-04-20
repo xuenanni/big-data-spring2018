@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html lang = "en">
+<head>  //where I load things and describe the document
+  <title>I am learning D3</title>
+  <meta charset = "utf-8">
+  <script src="http://d3js.org/d3.v4.js" charset="utf-8"></script>
+</head>
+<body>
+  <!-- 40,90,30,60-->
+  <!-- <svg width = "160" height="180">
+    <rect x="30" width = "20" height="40" fill="steelblue"></rect>
+    <rect x="55" width = "20" height="90" fill="steelblue"></rect>
+    <rect x="80" width = "20" height="30" fill="steelblue"></rect>
+    <rect x="105" width = "20" height="60" fill="steelblue"></rect>
+  </svg> -->
+<!-- command + slash-->
+  <script>
+    var neigh311 = [];
+    d3.csv("data/neigh_311.csv",function(d){
+      return{
+        neigh : d.neighborhood,
+        num_311 : +d.num_311
+      };
+    }, function(error,rows){
+      neigh311 = rows;
+      console.log(neigh311);
+      createVisualization();
+    }
+  );
+
+  function createVisualization(){
+
+
+
+  //  var ratData = [40,90,30,60];
+    console.log(d3.selectAll("rect"));
+
+    var w = 150;
+    var h = 175;
+    var arrayLenth = neigh311.length;
+    var maxValue = d3.max(neigh311,function(d){return +d.num_311 });
+    var x_axislength = 100;
+    var y_axisLength = 100;
+
+    var yScale = d3.scaleLinear()
+        .domain([0,maxValue])
+        .range([0, y_axisLength]);
+
+    var svg = d3.select("body")
+       .append("svg")
+       .attr("weight",w)
+       .attr("height",h);
+    //select all rect in our page
+
+//interactive hover
+    var tooltip = d3.select("body")
+        .append("div")
+        .style("position","absolute")
+        .style("font-family","'Open Sans',sans-serif")
+        .style("font-size","12px")
+        .style("z-index","10")
+        .style("visibility","hidden");
+
+
+
+    svg.selectAll("rect")
+    //bind ratData to rect, creates a rectangle array with value to be assigned
+      .data(neigh311)
+      .enter()
+      .append("rect")
+      .attr("x",function(d,i){
+        //return i*25 + 30;
+        return i*(x_axislength/arrayLenth) + 30;
+      })
+      .attr("y", function(d){
+      //  return h-d;
+          return h - yScale(d.num_311);
+      }) //to inverse the bars
+      .attr("width",(x_axislength/arrayLenth)-2)
+      .attr("height",function(d){
+        //return d;
+        return yScale(d.num_311);
+      })
+      .attr("fill","red")
+      .on("mouseover",function(d){
+        return tooltip.style("top",(event.pageY -10)+ "px").style("left",(event.pageX+10)+"px").text(d.neigh + ": " + d.num_311);
+      })
+      .on("mouseout",function(d){
+        return tooltip.style("visibility","hidden")
+      });
+
+      svg.append("line")
+         .attr("x1",30)
+         .attr("y1",75)
+         .attr("x2",30)
+         .attr("y2",175)
+         .attr("stroke-width",2)
+         .attr("stroke","black");
+
+       svg.append("line")
+       .attr("x1",30)
+       .attr("y1",175)
+       .attr("x2",130)
+       .attr("y2",175)
+       .attr("stroke-width",2)
+       .attr("stroke","black");
+
+      svg.append("text")
+         .attr("class", "y label")
+         .attr("text-anchor","end")
+         .text("No.of 311 neighborhoods")
+         .attr("transform","translate(20,20) rotate(-90)");
+
+      //set height based on value of array at interator position
+      // .attr("height",function(d){ //d refers to the value stored in the rectangle array
+      //   console.log(d);
+      //   return d;
+      // }); //use ; after a finished statement
+
+};
+  </script>
+
+</body>
+
+
+
+
+</html>
