@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <title>Mapping</title>
+  <script src="http://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="https://d3js.org/topojson.v2.min.js"></script>
+  <meta charset="utf-8">
+
+  <style>
+  .incident{
+    fill: steelblue;
+  }
+  </style>
+  <div class = "my-legen">
+    <div class = "legend-title">Choropleth Map of Boston Neighborhoods (shaded according to the percentage of 311 requests that are made using Twitter)
+      </div>
+  </div>
+</head>
+<body>
+  <script>
+  var width = 960;
+  var height =720;
+
+  var svg = d3.select("body")
+  .append("svg")
+  .attr("width",width)
+  .attr("height",height)
+
+  var perc = d3.map();
+
+  var albersProjection = d3.geoAlbers()
+  .scale(190000)
+  .rotate([71.057,0])//rotation means longtitude
+  .center([0,42.3131])//rotation and center split the lon/lat
+  .translate([width/2,height/2]);
+
+  var path = d3.geoPath()
+    .projection(albersProjection);
+
+  console.log(d3.range(1,5));
+  console.log(d3.schemeBlues[5]);
+
+  var color = d3.scaleThreshold()
+  .domain([0, 0.1, 0.2, 0.3, 0.4])
+  .range(d3.schemeBlues[5]);
+
+  d3.queue() //set up a line of flies--prevent that we run code that requires data haven't been loaded yet
+  //when the file is loaded, run function readys
+    .defer(d3.json, "data/boston_neigh.json")
+   .defer(d3.csv, "data/boston_311_totals.csv", function(d){
+     var rat = d.twit_count/d.tot_count * 100
+     perc.set(d.id, + rat);})
+    .await(ready);
+
+  function ready(error, neigh){ //us refers to unemployment: var-code goes sequentially
+    if (error) throw error;
+  console.log(topojson.feature(neigh, neigh.objects.boston_neigh).features);
+  console.log(neigh);
+
+ svg.append("g")
+   .selectAll("path")
+   .data(topojson.feature(neigh, neigh.objects.boston_neigh).features)
+   .enter().append("path")
+     .attr("fill", function(d) { return color(d.rat = perc.get(d.properties.OBJECTID));})
+     .attr("stroke","#333")
+     .attr("d", path);
+  // .append("title")
+  //   .text(function(d) { return d. + "%"; });
+
+
+};
+
+  </script>
+</body>
+</html>
