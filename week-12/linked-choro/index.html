@@ -76,11 +76,15 @@
 	  results.forEach(function(d) {
 			marginById[d.id] = +d.margin;
 			stateById[d.id] = d.State;
+			console.log(marginById[d.id]);
+			console.log(stateById[d.id]);
 	  });
+		console.log(topojson.feature(us, us.objects.states).features);
+
 
 	  // create and style states
 	  map.append("g")
-			.attr("class", "states")
+			//.attr("class", "states")
 			.selectAll("path")
 				.data(topojson.feature(us, us.objects.states).features)
 				.enter().append("path")
@@ -100,7 +104,7 @@
 				});
 
 		// STACKED BAR CHART WITH HOVER
-
+ 
 		var m = {top: 20, right: 100, bottom: 30, left: 100},
 			width = +map.attr("width") - m.left - m.right,
 			height = +map.attr("height") - m.top - m.bottom,
